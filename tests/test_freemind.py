@@ -10,7 +10,7 @@ class FreemindTestCase(unittest.TestCase):
         result = freemind_load('Test.mm')
         bottom = select_bottom(result)
         self.assertEqual('In progress', bottom[0].get_title())
-        self.assertEqual('Task1', bottom[1].get_title())
+        self.assertEqual('Canceled', bottom[1].get_title())
 
     def test_traverse(self):
         doc = freemind_load('Test.mm')
@@ -28,7 +28,7 @@ class FreemindTestCase(unittest.TestCase):
         doc = freemind_load('Test.mm')
         node = doc[0][1]
         self.assertEqual('Stop', node.get_title())
-        print(node.get_content())
+        # print(node.get_content())
         # self.assertEqual("abc\ndef", node.get_content())
 
 

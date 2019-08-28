@@ -9,8 +9,14 @@ sys.path.append('D:/Denis/python/freemind-tools')
 from datetime import date, datetime
 import freemind
 import os.path
+import re
 
 from pprint import pprint
+
+
+BTN_OK = 'button_ok'
+BTN_STOP = 'stop-sign'
+BTN_CANCEL = 'button_cancel'
 
 
 # def print_as_tree(node, level):
@@ -19,7 +25,7 @@ from pprint import pprint
 #             print(level * '  '  + node[key])
 
 
-def check_path(path=None):        
+def check_path(path=None):
     if path is None or not os.path.isfile(path):
         print("Please define valid path")
         exit()
@@ -43,10 +49,12 @@ def node_is_expired(node):
 
 
 def format_icon(icon):
-    if icon == 'button_ok':
+    if icon == BTN_OK:
         return 'DONE'
-    elif icon == 'stop-sign':
+    elif icon == BTN_STOP:
         return 'STOP'
+    elif icon == BTN_CANCEL:
+        return 'CANCEL'
     else:
         return icon
 
@@ -78,22 +86,38 @@ def format_node(node: freemind.FreeMindNode, format="flag parent / title {attrs}
         flag += '[EXPIRED] '
 
     parent = ''
+    grandparent = ''
     if node.get_parent() is not None:
         parent = node.get_parent().get_title()
 
+        if node.get_parent().get_parent() is not None:
+            grandparent = node.get_parent().get_parent().get_title()
+
     icon = ", ".join(format_icons(node.get_attr('@ICON')))
+
+    if node.has_content():
+        content = "--\n%s\n--\n" % node.get_content()
+    else:
+        content = ''
 
     # return "%s%s / %s {%s} %s" % (flag, parent, node.get_title(), ", ".join(attrs), node.get_attr('@ICON'))
     # print(format.replace('icon', node.get_attr('@ICON')))
-    return format\
-        .replace('parent', parent)\
-        .replace('flag', flag)\
-        .replace('title', node.get_title())\
-        .replace('attrs', ", ".join(attrs))\
-        .replace('icon', icon)
+
+    attr_pattrn = re.compile("{@([\w\-]+)}")
+    return attr_pattrn.sub(lambda m: node.get_attr(m.group(1)), format) \
+        .replace('{parent}', parent) \
+        .replace('{grandparent}', grandparent) \
+        .replace('{flag}', flag) \
+        .replace('{title}', node.get_title()) \
+        .replace('{attrs}', ", ".join(attrs)) \
+        .replace('{icon}', icon)\
+        .replace('{content}', content)
 
 
 def match_condition(node, filter_rules):
+    # if len(filter_rules) == 1 and filter_rules[0] == '':
+    #     return True
+
     conditions = []
     for i in filter_rules:
         if i == '':  # if empty condition passed
@@ -108,6 +132,10 @@ def match_condition(node, filter_rules):
             conditions.append(True)
         elif i[:4] == 'icon' and node.has_attr("@ICON") and i[5:] in node.get_attr("@ICON"):
             conditions.append(True)
+        elif i[:9] == 'has-attr:' and node.has_attr(i[9:]):
+                conditions.append(True)
+        elif i[:11] == 'hasnt-attr:' and not node.has_attr(i[11:]):
+            conditions.append(True)
         elif i[:5] == '!icon' and node.has_attr("@ICON") and i[6:] not in node.get_attr("@ICON"):
             conditions.append(True)
         elif i == 'expired' and node_is_expired(node):
@@ -120,21 +148,25 @@ def match_condition(node, filter_rules):
             if len(i) == 8:
                 conditions.append(True)  # just assigned
             elif node.get_attr("Assigned") == i[9:]:
-                conditions.append(True)  # assigned and has passed employee
+                conditions.append(True)  # assigned and has passed assignee
         else:
             conditions.append(False)
     # TODO : simplify it later
     # print(node)
-    # print(conditions)
+    # print(filter_rules, conditions)
     return len([i for i in conditions if i]) > 0
 
 
 def nodes_select(doc, rules: str):
+    if rules == '':
+        return doc
     conditions = rules.split(',')
     return [i for i in freemind.traverse(doc, lambda n: match_condition(n, conditions))]
 
 
 def nodes_filter(nodes: list, rules: str):
+    if rules == '':
+        return nodes
     conditions = rules.split(',')
     return [i for i in nodes if not match_condition(i, conditions)]
 
@@ -147,7 +179,7 @@ def query_nodes(path=None, select='', filter=''):
     return result
 
 
-def todo_command(path=None, select='', filter='', group=''):
+def todo_command(path=None, select='', filter='', group='', format='flag title {attrs} icon'):
     result = query_nodes(path, select=select, filter=filter)
 
     # for i in result:
@@ -156,7 +188,7 @@ def todo_command(path=None, select='', filter='', group=''):
 
     if group == '':
         for i in result:
-            print(format_node(i))
+            print(format_node(i, format=format))
     else:
         groups = {}
         for i in result:
@@ -168,44 +200,92 @@ def todo_command(path=None, select='', filter='', group=''):
             # sys.stdout.buffer.write(i)
             # print(i)
             print(i)
-            print("\n".join(["\t%s" % format_node(i) for i in sorted(groups[i], key=lambda x: x.get_title())]))
+            print("\n".join(["\t%s" % format_node(i, format=format) for i in sorted(groups[i], key=lambda x: x.get_title())]))
 
 
-def process_goals(nodes:list, filter:list, description='yes', level=0):
+def process_goals(nodes:list, filter:list, level=0, format='flag title {attrs} icon'):
     if type(nodes) is freemind.FreeMindNode:
-        format = "flag title {attrs} icon"
-        print(level * '  ' + format_node(nodes, format))
-        if nodes.has_content():
-            content = nodes.get_content()
-            l = level + 1
-            if description == 'yes':
-                print(l * '  ' + '---')
-                delim = l * '  '
-                print(delim + ('\n' + delim).join(content.split("\n")))
-                print(l * '  ' + '---')
+        print(level * '  ' + format_node(nodes, format=format))
+        # if nodes.has_content():
+        #     content = nodes.get_content()
+        #     l = level + 1
+        #     if description == 'yes':
+        #         print(l * '  ' + '---')
+        #         delim = l * '  '
+        #         print(delim + ('\n' + delim).join(content.split("\n")))
+        #         print(l * '  ' + '---')
     if len(nodes) > 0:
         for node in nodes:
             if not match_condition(node, filter):
-                process_goals(node, filter, description, level + 1)
+                process_goals(node, filter, level + 1, format=format)
 
 
-def goals_command(path=None, select='', filter='', description='no'):
+def goals_command(path=None, select='', filter='', format='flag title {attrs} icon'):
     result = query_nodes(path, select, filter)
 
     if not result:
         print("%s not found" % select)
     else:
         # then process only first node cause we don't expect find more
-        process_goals(result, filter.split(','), description)
+        process_goals(result, filter.split(','), format=format)
 
 
 def stat_command(path=None):
     check_path(path)
     print("Goals count: %s" % len(query_nodes(path, '*', '')))
-    print("Goals done: %s" % len(query_nodes(path, 'icon-button_ok', '')))
+    print("Goals done: %s" % len(query_nodes(path, 'icon-%s' % BTN_OK, '')))
+    print("Goals canceled: %s" % len(query_nodes(path, 'icon-%s' % BTN_CANCEL, '')))
+    print("Goals stoped: %s" % len(query_nodes(path, 'icon-%s' % BTN_STOP, '')))
 
     node = freemind.freemind_load(path)
     print("Goals in progress: %s" % len(freemind.select_bottom(node)))
+
+
+def traverse_command(path=None, select='', filter='', format='title'):
+    result = query_nodes(path, select, filter)
+
+    if not result:
+        print("%s not found" % select)
+    else:
+        # then process only first node cause we don't expect find more
+        process_goals(result, filter=filter.split(','), format=format)
+
+
+def questions_command(path=None):
+    check_path(path)    
+
+    def fn_list(n):
+        if not hasattr(fn_list, 'counter'):
+            fn_list.counter = 1
+        if n.has_attr('@ICON') and 'help' in n.get_attr('@ICON'):            
+            print("%s. %s\n   %s\n" % (fn_list.counter, n.get_title(), n.get_content()))
+            fn_list.counter += 1
+
+    result = freemind.freemind_load(path)
+    freemind.traverse(result, fn_list)
+
+
+def estimate_command(path=None, format=' - {grandparent}/{parent}/{title}, {@estimate}h'):
+    check_path(path)        
+
+    def fn_list(n):
+        if not hasattr(fn_list, 'result'):
+            fn_list.result = []
+            fn_list.total = 0
+
+        if n.has_attr('estimate'):
+            if n.has_attr('@ICON') and BTN_STOP in n.get_attr('@ICON'):
+                return
+
+            fn_list.result.append(format_node(n, format))
+            fn_list.total += float(n.get_attr('estimate'))
+
+    result = freemind.freemind_load(path)
+    freemind.traverse(result, fn_list)
+
+    [print(i) for i in sorted(fn_list.result)]
+    print("\nTotal: %sh" % fn_list.total)
+
 
 
 if __name__ == '__main__':
@@ -216,6 +296,8 @@ if __name__ == '__main__':
     # shell.py group --path=Goals.mm --by=expired // expired tasks
     # mm todo --path=Goals.mm --filter=not-assigned --group=Assigned
     # mm todo --path=Goals.mm --filter=expired
+    # mm traverse --path=tests\Test.mm --select="title:New Mindmap" --format="title @Assigned"
+
 
     # node = freemind.FreeMindNode(None)
     # node.set_title('test')
@@ -225,16 +307,34 @@ if __name__ == '__main__':
     # goals_command('Goals.mm', select='title:Ilya Levoshko (QA)', filter='icon-button_ok,icon-stop-sign', description='no')
     # todo_command('Goals.mm', select='expired', filter='icon-button_ok')
     # todo_command('Goals.mm', select='assigned:@Sheremetov', filter='icon-button_ok')
-    # todo_command('Goals.mm', select='assigned', filter='icon-button_ok', group='Assigned')
+    # todo_command('D:\Denis\python\onixteam\Goals.mm', select='assigned', filter='icon-button_ok')
+    # exit()
     # todo_command('D:\Denis\python\onixteam\Goals.mm', select='id:363b6bf92c5df3e2dc30043f1212d103')
     # PATH = 'D:\Denis\python\onixteam\Goals.mm'
+    # result = query_nodes(PATH, select='root')
+
     # stat_command(PATH)
     # nodes = query_nodes(PATH, 'icon-button_ok', '')
     # print(len(nodes))
-    # exit()
+
 
     # nodes = freemind.freemind_load('Goals.mm')
-    # todo_command('Goals.mm')
+    # todo_command('tests/Test.mm')
+
+    # result = freemind.freemind_load('tests\Test.mm')
+    # freemind.traverse_with_level(result, lambda n, l: print((l-1) * '  ' + format_node(n, 'parent/title {attrs}')))
+
+    # traverse_command('tests/Test.mm', select='title:New Mindmap', filter='', format='title {@Assigned}')
+    # traverse_command("D:/Dropbox/onix/clients/UpMost/UpMostLanding.mm", select='title:Screens', filter='icon-stop-sign', format='title,{@estimate},{@estimate-res}')
+    # exit()
+
+    # print([i.get_title() for i in query_nodes("D:/Dropbox/onix/clients/UpMost/UpMostLanding.mm")])
+    
+    # freemind.traverse(result, lambda n: print(format_node(n, 'title')))
+
+    # estimate_command("D:/Dropbox/onix/clients/UpMost/UpMostLanding.mm")
+    # estimate_command("tests/Test.mm")
+    # exit()        
 
     from commandliner import commandliner
     commandliner(locals())

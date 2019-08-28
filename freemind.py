@@ -60,6 +60,9 @@ class FreeMindNode:
     def has_attr(self, name):
         return name in self.__attrs
 
+    def dump(self):
+        print(self.__attrs)
+
     def set_title(self, title):
         self.__title = title
 
@@ -120,6 +123,19 @@ def traverse(node, fn):
 
     for i in node:
         res = traverse(i, fn)
+        if len(res) > 0:
+            for j in res:
+                result.append(j)
+    return result
+
+
+def traverse_with_level(node, fn, level=0):
+    result = []
+    if fn(node, level):
+        result.append(node)
+
+    for i in node:
+        res = traverse_with_level(i, fn, level+1)
         if len(res) > 0:
             for j in res:
                 result.append(j)
@@ -274,16 +290,18 @@ def dict_to_txt(nodes):
 
 
 if __name__ == '__main__':
-    FILE = 'D:\Denis\python\onixteam\Goals.mm'
+    # FILE = 'D:\Denis\python\onixteam\Goals.mm'
+    FILE = 'tests\Test.mm'
     result = freemind_load(FILE)
+    traverse_with_level(result, lambda n, l: print((l-1) * '  ' + n.get_title()))
     # bottom = select_bottom(result)
     # for i in bottom:
     #     # print(i.get_title(), i.has_attr())
     #     i.display()
 
     # result[0].display()
-    doc = read_xml(FILE)
+    # doc = read_xml(FILE)
     # pprint(doc)
     # print(traverse(doc, search))
     # traverse(doc, print_as_tree)
-    traverse(doc, lambda n: False)
+    # traverse(doc, lambda n: False)
