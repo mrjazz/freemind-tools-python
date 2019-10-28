@@ -103,13 +103,6 @@ def debug(node, level):
     print(node)
 
 
-def search(node, level):
-    for key in node:
-        if key == '@TEXT' and node[key] == 'Internship':
-            return node
-    return False
-
-
 def print_as_tree(node, level=0):
     for key in node:
         if key == '@TEXT':
@@ -151,7 +144,7 @@ def __process(nodes, title, parent):
     if type(nodes) is OrderedDict:
         attrs = {}
         result = FreeMindNode(parent)
-        for node in nodes:
+        for node in nodes:            
             if type(node) is str and node[:1] == '@':
                 if node not in ignore_attr:
                     attrs.setdefault(node, nodes[node])
@@ -174,7 +167,7 @@ def __process(nodes, title, parent):
                         attrs.setdefault(nodes[node]['@NAME'], nodes[node]['@VALUE'])
 
                     # attrs.setdefault('@ICON', [nodes[node]['@BUILTIN']])
-                else:
+                else:                    
                     processed_nodes = __process(nodes[node], node, result)
                     if type(processed_nodes) is list:
                         result.add_nodes(processed_nodes)
@@ -185,7 +178,7 @@ def __process(nodes, title, parent):
 
         result.set_attrs(attrs)
         result.set_content(content)
-
+        
         if '@TEXT' in attrs:
             result.set_title(attrs['@TEXT'])
         else:

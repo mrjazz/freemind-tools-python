@@ -266,7 +266,7 @@ def questions_command(path=None):
 
 
 def estimate_command(path=None, format=' - {grandparent}/{parent}/{title}, {@estimate}h'):
-    check_path(path)        
+    check_path(path)  
 
     def fn_list(n):
         if not hasattr(fn_list, 'result'):
@@ -286,6 +286,62 @@ def estimate_command(path=None, format=' - {grandparent}/{parent}/{title}, {@est
     [print(i) for i in sorted(fn_list.result)]
     print("\nTotal: %sh" % fn_list.total)
 
+
+def spec_command(path=None, parts=None, out=None):
+    check_path(path)
+
+    doc = freemind.freemind_load(path)
+
+    if out:
+        output = open(out, "w", encoding="utf-8")
+
+    def process_node(n, level):
+        result = level * '#' + ' ' + n.get_title() + "\n\n"            
+        # print(level * '#' + ' ' + n.get_title())
+        
+        if n.has_content():
+            result += n.get_content() + "\n\n"
+
+        if out:
+            output.write(result)                
+        else:
+            print(result)
+
+    def fn_list(nodes, level):
+        if not nodes:             
+            return
+        for n in nodes:            
+            process_node(n, level)
+                
+            fn_list(n, level+1)
+
+
+    if parts is None:
+        pass
+    else:
+        for part in parts.split(';'):
+            nodes = nodes_select(doc, "title:%s" % part)            
+
+            fn_list(nodes, 1)                
+            # print(nodes)
+
+    if out:
+        output.close()
+
+
+def tex_command(path):
+    check_path(path)
+    doc = open(path).read()
+    begin_marker = '\\begin{document}'
+    end_marker = '\\end{document}'
+    begin_pos = doc.find(begin_marker)
+    end_pos = doc.find(end_marker)    
+    
+    if begin_pos < 0 or end_pos < 0:
+        print('Markers not found')
+        return
+    
+    print(doc[begin_pos+len(begin_marker):end_pos])    
 
 
 if __name__ == '__main__':
@@ -319,14 +375,12 @@ if __name__ == '__main__':
 
 
     # nodes = freemind.freemind_load('Goals.mm')
-    # todo_command('tests/Test.mm')
-
-    # result = freemind.freemind_load('tests\Test.mm')
-    # freemind.traverse_with_level(result, lambda n, l: print((l-1) * '  ' + format_node(n, 'parent/title {attrs}')))
+    # todo_command('tests/Test.mm')    
+    # result = freemind.freemind_load('D:/temp/presale/impesa/test.mm')    
+    # freemind.traverse_with_level(result, lambda n, l: print((l-1) * '  ' + format_node(n, '{title}')))
 
     # traverse_command('tests/Test.mm', select='title:New Mindmap', filter='', format='title {@Assigned}')
     # traverse_command("D:/Dropbox/onix/clients/UpMost/UpMostLanding.mm", select='title:Screens', filter='icon-stop-sign', format='title,{@estimate},{@estimate-res}')
-    # exit()
 
     # print([i.get_title() for i in query_nodes("D:/Dropbox/onix/clients/UpMost/UpMostLanding.mm")])
     
@@ -334,7 +388,13 @@ if __name__ == '__main__':
 
     # estimate_command("D:/Dropbox/onix/clients/UpMost/UpMostLanding.mm")
     # estimate_command("tests/Test.mm")
-    # exit()        
+
+    # spec_command('D:/temp/presale/impesa/Impesa.mm', 'Web application functionality')  
+
+    # display_command('D:/temp/presale/impesa/impesa.mm')
+    # tex_command('D:/temp/presale/impesa/impesa.tex')
+    # exit()           
+
 
     from commandliner import commandliner
-    commandliner(locals())
+    commandliner(locals())    
