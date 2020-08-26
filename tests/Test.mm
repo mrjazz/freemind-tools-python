@@ -1,6 +1,5 @@
 <map version="1.0.1">
 <!-- To view this file, download free mind mapping software FreeMind from http://freemind.sourceforge.net -->
-<attribute_registry SHOW_ATTRIBUTES="hide"/>
 <node CREATED="1541665693911" ID="ID_1232863674" MODIFIED="1541665693911" TEXT="New Mindmap">
 <node CREATED="1541665714623" ID="ID_1624551576" MODIFIED="1541665718250" POSITION="right" TEXT="Done">
 <icon BUILTIN="button_ok"/>
@@ -37,13 +36,15 @@
 <icon BUILTIN="button_cancel"/>
 </node>
 <node CREATED="1543013970883" ID="ID_469401212" MODIFIED="1543013974632" POSITION="left" TEXT="Groups">
-<node CREATED="1543013975304" ID="ID_564598809" MODIFIED="1566944521870" TEXT="Task1">
+<node CREATED="1543013975304" ID="ID_564598809" MODIFIED="1598448152915" TEXT="Task1">
 <attribute NAME="Assigned" VALUE="@Denis"/>
 <attribute NAME="Started" VALUE="Aug 1"/>
+<attribute NAME="estimate" VALUE="4"/>
 </node>
-<node CREATED="1543013977133" ID="ID_973014598" MODIFIED="1543014030979" TEXT="Task2">
+<node CREATED="1543013977133" ID="ID_973014598" MODIFIED="1598448157042" TEXT="Task2">
 <icon BUILTIN="button_ok"/>
 <attribute NAME="Assigned" VALUE="@Julia"/>
+<attribute NAME="estimate" VALUE="2"/>
 </node>
 </node>
 </node>
