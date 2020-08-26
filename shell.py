@@ -64,6 +64,9 @@ def format_icons(icons):
         return []
     return [format_icon(i) for i in icons]
 
+def full_node_path(fullNodePath, node):
+    return (full_node_path(fullNodePath, node.get_parent()) if
+            node.get_parent() is not None and node.get_parent().get_title() != 'root' else fullNodePath) + '/' + node.get_title()
 
 def format_node(node: freemind.FreeMindNode, format="flag parent / title {attrs} icon") -> str:
     """
@@ -87,6 +90,7 @@ def format_node(node: freemind.FreeMindNode, format="flag parent / title {attrs}
 
     parent = ''
     grandparent = ''
+    fullnodepath = full_node_path('', node)
     if node.get_parent() is not None:
         parent = node.get_parent().get_title()
 
@@ -107,6 +111,7 @@ def format_node(node: freemind.FreeMindNode, format="flag parent / title {attrs}
     return attr_pattrn.sub(lambda m: node.get_attr(m.group(1)), format) \
         .replace('{parent}', parent) \
         .replace('{grandparent}', grandparent) \
+        .replace('{fullnodepath}', fullnodepath) \
         .replace('{flag}', flag) \
         .replace('{title}', node.get_title()) \
         .replace('{attrs}', ", ".join(attrs)) \
