@@ -19,3 +19,44 @@ Select node with id _363b6bf92c5df3e2dc30043f1212d103_
 todo_command('Tasks.mm', select='id:363b6bf92c5df3e2dc30043f1212d103')
 ```
 
+### Test Cases Generation
+
+There is simple php scripts that recursivery goes through the tree of states and generate all possible test cases. 
+
+For example, this script: 
+
+```
+php freemind-tests.php examples/Store.mm Flow 1
+```
+
+Generates result:
+
+```
+TestCase #1
+ - Flow
+ - Homepage
+ - Login
+ - Profile
+ - End
+
+TestCase #2
+ - Flow
+ - Homepage
+ - Catalog
+ - Add to Cart
+ - Checkout
+ - Payment
+ - Shipping
+ - Order confirmation
+ - End
+
+TestCase #3
+ - Flow
+ - Homepage
+ - Catalog
+ - Add to Cart
+ - Goto:Login (if not logged in)
+ - Login
+ - Profile
+ - End
+ ```
