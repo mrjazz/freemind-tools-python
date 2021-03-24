@@ -1,0 +1,1 @@
+mm todo --path=D:\Denis\python\onixteam\Goals.mm --select=expired --filter=icon-button_ok

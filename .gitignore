@@ -1,5 +1,3 @@
+*.pyc
+*.iml
 .idea
-/*.iml
-
-/*.mm
-/*.bat

@@ -1,0 +1,1 @@
+mm todo --path=D:\Denis\python\onixteam\Goals.mm --select=assigned --group=Assigned --filter=not-Assigned,icon-button_ok

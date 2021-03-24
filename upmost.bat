@@ -1,0 +1,1 @@
+mm traverse --path="D:\Dropbox\onix\clients\UpMost\UpMostLanding.mm" --select="title:Screens" --filter="icon-stop-sign" --format="{title},{@estimate},{@estimate-res}"

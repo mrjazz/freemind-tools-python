@@ -3,6 +3,7 @@
 # import os
 # os.chdir('D:/Denis/python/freemind-tools')
 
+
 import sys
 sys.path.append('D:/Denis/python/freemind-tools')
 
@@ -292,6 +293,58 @@ def estimate_command(path=None, format=' - {grandparent}/{parent}/{title}, {@est
     print("\nTotal: %sh" % fn_list.total)
 
 
+def competences_command(path=None):
+    check_path(path)
+
+    result = query_nodes(path, select='title:Activities')
+    if len(result) != 1:
+        print('Activities node missed')
+        return
+
+    import json
+
+    output = []
+        
+    for competence in result[0]:
+        tech = False
+        if competence.has_attr('tech') and competence.get_attr('tech').lower() == 'yes':
+            tech = True
+
+        project = False
+        if competence.has_attr('project') and competence.get_attr('project').lower() == 'yes':
+            project = True
+
+        roles = '-'
+        if competence.has_attr('roles'):
+            roles = competence.get_attr('roles')
+        
+        # print("%s [tech: %s, project: %s, roles: %s]" % (competence.get_title(), tech, project, roles))
+
+        competences = []
+
+        for competence_level in competence:
+            level = 0
+            if competence_level.has_attr('@ICON'):
+                if 'full-1' in competence_level.get_attr('@ICON'):
+                    level = '1'
+                elif 'full-2' in competence_level.get_attr('@ICON'):
+                    level = '2'
+                elif 'full-3' in competence_level.get_attr('@ICON'):
+                    level = '3'
+                elif 'full-4' in competence_level.get_attr('@ICON'):
+                    level = '4'
+            # print("  %s. %s" % (level, competence_level.get_title()))
+            competences.append({'level': level, 'desc': competence_level.get_title()})    
+        output.append({
+            'title': competence.get_title(), 
+            'tech': tech, 
+            'project': project, 
+            'roles': roles.split(','),
+            'competences': competences
+        })    
+    print(json.dumps(output))
+
+
 def spec_command(path=None, parts=None, out=None):
     check_path(path)
 
@@ -302,7 +355,6 @@ def spec_command(path=None, parts=None, out=None):
 
     def process_node(n, level):
         result = level * '#' + ' ' + n.get_title() + "\n\n"            
-        # print(level * '#' + ' ' + n.get_title())
         
         if n.has_content():
             result += n.get_content() + "\n\n"
@@ -349,7 +401,7 @@ def tex_command(path):
     print(doc[begin_pos+len(begin_marker):end_pos])    
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':    
     # shell.py search --path=Goals.mm --icon=stop-sign // nodes on hold
     # shell.py search --path=Goals.mm --icon=yes // important nodes
     # shell.py search --path=Goals.mm // all nodes
@@ -371,8 +423,6 @@ if __name__ == '__main__':
     # todo_command('D:\Denis\python\onixteam\Goals.mm', select='assigned', filter='icon-button_ok')
     # exit()
     # todo_command('D:\Denis\python\onixteam\Goals.mm', select='id:363b6bf92c5df3e2dc30043f1212d103')
-    # PATH = 'D:\Denis\python\onixteam\Goals.mm'
-    # result = query_nodes(PATH, select='root')
 
     # stat_command(PATH)
     # nodes = query_nodes(PATH, 'icon-button_ok', '')
@@ -400,6 +450,11 @@ if __name__ == '__main__':
     # tex_command('D:/temp/presale/impesa/impesa.tex')
     # exit()           
 
+    # PATH = '/home/denis/Dropbox/Onix/skills-matrix-v2.mm'
+    # competences_command(PATH)
+    # exit()
+
+    # python3 shell.py competences --path=/home/denis/Dropbox/Onix/skills-matrix-v2.mm > /var/www/hrm/web/code/webroot/competences.json
 
     from commandliner import commandliner
     commandliner(locals())    
