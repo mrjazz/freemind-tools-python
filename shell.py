@@ -25,17 +25,35 @@ BTN_CANCEL = 'button_cancel'
 #         if key == '@TEXT':
 #             print(level * '  '  + node[key])
 
+def display_nodes(nodes:list, level=0):
+    if type(nodes) is freemind.FreeMindNode:                
+        print(level * '  ' + nodes.get_title())
+        if nodes.has_content():
+            content = nodes.get_content()
+            l = level + 1            
+            print(l * '  ' + '---')
+            delim = l * '  '
+            print(delim + ('\n' + delim).join(content.split("\n")))
+            print(l * '  ' + '---')
+        if len(nodes) > 0:
+            for node in nodes:                
+                display_nodes(node, level + 1)
+
+
+def display_command(path=None):
+    result = query_nodes(path)
+
+    if not result:
+        print("%s not found" % select)
+    else:
+        # then process only first node cause we don't expect find more
+        display_nodes(result)
+
 
 def check_path(path=None):
     if path is None or not os.path.isfile(path):
         print("Please define valid path")
         exit()
-
-
-def display_command(path=None):
-    check_path(path)
-    doc = freemind.read_xml(path)
-    freemind.traverse_xml(doc, freemind.print_as_tree)
 
 
 def dict_set(props, name, value):
