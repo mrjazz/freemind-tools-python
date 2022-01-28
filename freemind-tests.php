@@ -5,7 +5,7 @@ if (isset($_SERVER['argv']) && count($_SERVER['argv']) > 2) {
     $doc = file_get_contents($_SERVER['argv'][1]);
 
     $xml = new SimpleXMLElement($doc);
-//    print_as_tree($xml);
+    // print_as_tree($xml);
     if (count($_SERVER['argv']) == 4) {
         $cycles = $_SERVER['argv'][3];
     } else {

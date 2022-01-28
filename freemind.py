@@ -6,7 +6,7 @@ from pprint import pprint
 
 def read_xml(file_path):
     with open(file_path) as fd:
-        return xmltodict.parse(fd.read())
+        return xmltodict.parse(fd.read().replace('&nbsp;', '§'))
 
 
 def traverse_xml(nodes, fn, level=0):
@@ -136,7 +136,7 @@ def traverse_with_level(node, fn, level=0):
 
 
 def __process(nodes, title, parent):
-    ignore_node = ['font', 'edge', 'attribute_registry']
+    ignore_node = ['font', 'edge', 'attribute_registry', 'hook']
     ignore_attr = ['@FOLDED', '@POSITION', '@X_COGGLE_POSY', '@X_COGGLE_POSX', '@STYLE', '@NAME_WIDTH', '@VALUE_WIDTH']
     attrs_date = ['START', 'DUE']
     content = ''
@@ -144,7 +144,10 @@ def __process(nodes, title, parent):
     if type(nodes) is OrderedDict:
         attrs = {}
         result = FreeMindNode(parent)
-        for node in nodes:            
+        for node in nodes:
+            if nodes[node] is None:
+                continue
+            
             if type(node) is str and node[:1] == '@':
                 if node not in ignore_attr:
                     attrs.setdefault(node, nodes[node])
@@ -194,7 +197,6 @@ def __process(nodes, title, parent):
             # else:
             #     result.append(FreeMindNode(__process(node)))
         return result
-
     raise Exception("Unknown type %s" % type(nodes))
 
 
@@ -284,9 +286,10 @@ def dict_to_txt(nodes):
 
 if __name__ == '__main__':
     # FILE = 'D:\Denis\python\onixteam\Goals.mm'
-    FILE = 'tests\Test.mm'
-    result = freemind_load(FILE)
-    traverse_with_level(result, lambda n, l: print((l-1) * '  ' + n.get_title()))
+    FILE = 'tests/TestFP.mm'
+    
+    # result = freemind_load(FILE)
+    # traverse_with_level(result, lambda n, l: print((l-1) * '  ' + n.get_title()))
     # bottom = select_bottom(result)
     # for i in bottom:
     #     # print(i.get_title(), i.has_attr())

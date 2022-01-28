@@ -4,7 +4,7 @@ from collections import OrderedDict
 from freemind import traverse_xml, traverse, freemind_load, select_bottom, print_as_tree
 
 
-PATH_TO_TEST_FILE = './tests/Test.mm'
+PATH_TO_TEST_FILE = './tests/TestFP.mm'
 
 class FreemindTestCase(unittest.TestCase):
 

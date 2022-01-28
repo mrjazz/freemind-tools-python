@@ -5,9 +5,10 @@ from freemind import FreeMindNode
 
 import re
 from os.path import exists
+from pprint import pprint
 
 
-PATH_TO_TEST_FILE = './tests/Test.mm'
+PATH_TO_TEST_FILE = './tests/TestFP.mm'
 
 class ShellTestCase(unittest.TestCase):
 
@@ -60,8 +61,6 @@ class ShellTestCase(unittest.TestCase):
 
         result = query_nodes(PATH_TO_TEST_FILE, select='title:Done')
         self.assertEqual('Done - []', format_node(result[0], '{title} - [{@Assigned}]'))
-
-
 
 
 if __name__ == "__main__":

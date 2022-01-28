@@ -5,15 +5,15 @@
 
 
 import sys
-sys.path.append('D:/Denis/python/freemind-tools')
 
-from datetime import date, datetime
-import freemind
+# sys.path.append('D:/Denis/python/freemind-tools')
+
 import os.path
 import re
-
+from datetime import date, datetime
 from pprint import pprint
 
+import freemind
 
 BTN_OK = 'button_ok'
 BTN_STOP = 'stop-sign'
@@ -339,6 +339,10 @@ def competences_command(path=None):
         confirm = ''
         if competence.has_attr('confirm'):
             confirm = competence.get_attr('confirm')
+
+        employee = False
+        if competence.has_attr('employee') and competence.get_attr('employee').lower() == 'yes':
+            employee = True
         
         # print("%s [tech: %s, project: %s, roles: %s]" % (competence.get_title(), tech, project, roles))
 
@@ -365,10 +369,15 @@ def competences_command(path=None):
             'project': project, 
             'roles': roles.split(','),
             'confirm': confirm.split(','),
-            'competences': competences
+            'competences': competences,
+            'employee': employee
         })    
+    
     print(json.dumps(output))
 
+
+def __revert_spaces(s):
+    return s.replace('§', ' ')
 
 def spec_command(path=None, parts=None, out=None):    
     check_path(path)
@@ -386,10 +395,11 @@ def spec_command(path=None, parts=None, out=None):
         if n.has_content():
             result += n.get_content() + "\n\n"
 
+        outStr = __revert_spaces(result)
         if out:
-            output.write(result)
+            output.write(outStr)
         else:
-            print(result)
+            print(outStr)
 
     def fn_list(nodes, level):
         if not nodes:             
@@ -481,6 +491,13 @@ if __name__ == '__main__':
     # exit()
 
     # python3 shell.py competences --path=/home/denis/Dropbox/Onix/skills-matrix-v2.mm > /var/www/hrm/web/code/webroot/competences.json
+
+    # result = query_nodes('tests/TestFP.mm', select='id:ID_1232863674')
+    # pprint(result[0][0])
+    # for i in result[0]:
+    #     pprint(i)
+    #     print('--')
+    # exit()
 
     from commandliner import commandliner
     commandliner(locals())    
