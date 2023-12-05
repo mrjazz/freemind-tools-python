@@ -1,6 +1,8 @@
 <?php
 
 
+error_reporting(0);
+
 if (isset($_SERVER['argv']) && count($_SERVER['argv']) > 2) {
     $doc = file_get_contents($_SERVER['argv'][1]);
 
@@ -45,9 +47,11 @@ function print_as_tree($xml) {
     });
 }
 
-function find_node($xml, $searchNode) {
+function find_node($xml, $searchNode) {    
     return traverse($xml, function ($node, $level) use ($searchNode) {
-        if ((new FlowNode($node['TEXT']))->getTitle() === $searchNode) {
+        $curNode = new FlowNode($node['TEXT']);
+        // var_dump($curNode);
+        if ($curNode->getTitle() === $searchNode) {
             return $node;
         }
         return false;
@@ -108,7 +112,8 @@ class FlowNode {
 
 class TestCaseDetector {
 
-    private $rootXml;
+    private $rootXml; // XML of flo that has to be processed
+    private $xml; // full XML 
 
     private $cyclesAllowed = 1;
 
@@ -121,9 +126,10 @@ class TestCaseDetector {
     private $resultOk = [];
     private $resultNotTerminated = [];
 
-    public function __construct($rootXml, $cyclesAllowed) {
+    public function __construct($rootXml, $cyclesAllowed, $xml) {
         $this->rootXml = $rootXml;
         $this->cyclesAllowed = $cyclesAllowed;
+        $this->xml = $xml;
     }
 
     public function process() {
@@ -142,7 +148,11 @@ class TestCaseDetector {
         if ($xml === null) {
             $xml = $this->rootXml;
         }
-        $out[] = (string)$xml['TEXT'];
+        if (!isset($xml['TEXT'])) {
+            // ignore node if it has no text
+            return;
+        }
+        $out[] = (string) $xml['TEXT'];
         if ($xml->count() > 0) {
             foreach ($xml->children() as $child) {
                 $this->collectTestCases($child, $out);
@@ -153,9 +163,10 @@ class TestCaseDetector {
     }
 
     private function validateTestCase($testCases) {
-//        echo "\n--\n";
-//        echo implode("\n", $testCases);
-        if (count($testCases) === 0) {
+        // echo "\n--\n";
+        // echo implode("\n", $testCases);
+        // var_dump($testCases);
+    	if (count($testCases) === 0) {
             throw new Exception("Testcase is empty");
             return;
         }
@@ -167,8 +178,7 @@ class TestCaseDetector {
             } else {
                 $flowNodes[$flowNode->getTitle()] += 1;
             }
-            if ($flowNodes[$flowNode->getTitle()] > $this->cyclesAllowed
-) {
+            if ($flowNodes[$flowNode->getTitle()] > $this->cyclesAllowed) {
 //                echo "WARN: Cycle found\n";
                 $this->resultCycles[] = $testCases;
                 return;
@@ -176,8 +186,9 @@ class TestCaseDetector {
         }
 
         $lastNode = new FlowNode($testCases[count($testCases) - 1]);
-        if ($lastNode->getType() === FlowNode::TYPE_REF) {
-            $node = find_node($this->rootXml, $lastNode->getRef());
+
+        if ($lastNode->getType() === FlowNode::TYPE_REF) {            
+            $node = find_node($this->xml, $lastNode->getRef());            
             if ($node === false) {
 //                echo "ERROR: Unknown reference: {$lastNode->getNodeTitle()}\n";
                 throw new Exception("Unknown reference: {$lastNode->getNodeTitle()}");
@@ -191,7 +202,6 @@ class TestCaseDetector {
             $this->resultOk[] = $testCases;
         }
     }
-
 }
 
 
@@ -202,7 +212,7 @@ function generate_test_cases($xml, $rootNode, $cycles) {
         return;
     }
 
-    $detector = new TestCaseDetector($flowNode, $cycles);
+    $detector = new TestCaseDetector($flowNode, $cycles, $xml);
     $result = $detector->process();
 
     foreach ($result[TestCaseDetector::RESULT_OK] as $k => $testCase) {

@@ -44,7 +44,7 @@ class FreeMindNode:
         self.__content = content
 
     def get_content(self) -> str:
-        return dict_to_txt(self.__content).strip()
+        return dict_to_txt(self.__content['html']).strip()
 
     def has_content(self):
         return self.__content != ''
@@ -141,7 +141,7 @@ def __process(nodes, title, parent):
     attrs_date = ['START', 'DUE']
     content = ''
 
-    if type(nodes) is OrderedDict:
+    if type(nodes) is OrderedDict or type(nodes) is dict:
         attrs = {}
         result = FreeMindNode(parent)
         for node in nodes:
@@ -197,6 +197,7 @@ def __process(nodes, title, parent):
             # else:
             #     result.append(FreeMindNode(__process(node)))
         return result
+        
     raise Exception("Unknown type %s" % type(nodes))
 
 
@@ -278,6 +279,9 @@ def dict_to_txt(nodes):
     elif type(nodes) is list:
         for i in nodes:
             result += dict_to_txt(i) + "\n"
+    elif type(nodes) is dict:
+        for i in nodes:        
+            result += "%s\n" % dict_to_txt(nodes[i])
     elif nodes is not None:
         return nodes
 
@@ -286,7 +290,12 @@ def dict_to_txt(nodes):
 
 if __name__ == '__main__':
     # FILE = 'D:\Denis\python\onixteam\Goals.mm'
-    FILE = 'tests/TestFP.mm'
+    # FILE = 'tests/TestFP.mm'
+
+    doc = freemind_load('tests/Test.mm')
+    node = doc[0][2]
+    pprint(node.get_content())
+    
     
     # result = freemind_load(FILE)
     # traverse_with_level(result, lambda n, l: print((l-1) * '  ' + n.get_title()))

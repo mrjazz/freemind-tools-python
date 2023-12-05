@@ -109,8 +109,8 @@ def format_node(node: freemind.FreeMindNode, format="flag parent / title {attrs}
 
     parent = ''
     grandparent = ''
-    fullnodepath = full_node_path('', node)
-    if node.get_parent() is not None:
+    fullnodepath = full_node_path('', node)    
+    if node.get_parent() is not None:        
         parent = node.get_parent().get_title()
 
         if node.get_parent().get_parent() is not None:
@@ -276,7 +276,7 @@ def traverse_command(path=None, select='', filter='', format='title'):
 
 
 def questions_command(path=None):
-    check_path(path)    
+    check_path(path)
 
     def fn_list(n):
         if not hasattr(fn_list, 'counter'):
@@ -334,7 +334,7 @@ def competences_command(path=None):
 
         roles = '-'
         if competence.has_attr('roles'):
-            roles = competence.get_attr('roles')
+            roles = competence.get_attr('roles')        
 
         confirm = ''
         if competence.has_attr('confirm'):
@@ -363,7 +363,8 @@ def competences_command(path=None):
                     level = '4'
             # print("  %s. %s" % (level, competence_level.get_title()))
             competences.append({'level': level, 'desc': competence_level.get_title()})    
-        output.append({
+        
+        result = {
             'title': competence.get_title(), 
             'tech': tech, 
             'project': project, 
@@ -371,7 +372,12 @@ def competences_command(path=None):
             'confirm': confirm.split(','),
             'competences': competences,
             'employee': employee
-        })    
+        }
+
+        if competence.has_attr('description'):
+            result.setdefault('description', competence.get_attr('description'))
+
+        output.append(result)    
     
     print(json.dumps(output))
 
