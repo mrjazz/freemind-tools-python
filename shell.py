@@ -282,27 +282,31 @@ def questions_command(path=None):
         if not hasattr(fn_list, 'counter'):
             fn_list.counter = 1
         if n.has_attr('@ICON') and 'help' in n.get_attr('@ICON'):            
-            print("%s. %s\n   %s\n" % (fn_list.counter, n.get_title(), n.get_content()))
+            print("%s. %s\n   %s\n" % (fn_list.counter, n.get_title(), n.get_content()))            
             fn_list.counter += 1
 
     result = freemind.freemind_load(path)
     freemind.traverse(result, fn_list)
 
 
-def estimate_command(path=None, format=' - {grandparent}/{parent}/{title}, {@estimate}h'):
-    check_path(path)  
+def estimate_command(path=None, field='estimate'):
+    check_path(path)
+    print("Estimate field: %s\n" % field)
+    format = ' - {grandparent}/{parent}/{title}, {@%s}h' % field
 
     def fn_list(n):
         if not hasattr(fn_list, 'result'):
             fn_list.result = []
             fn_list.total = 0
 
-        if n.has_attr('estimate'):
+        if n.has_attr(field):
             if n.has_attr('@ICON') and BTN_STOP in n.get_attr('@ICON'):
                 return
 
+            if n.get_attr(field).strip() == '':
+                return
             fn_list.result.append(format_node(n, format))
-            fn_list.total += float(n.get_attr('estimate'))
+            fn_list.total += float(n.get_attr(field))
 
     result = freemind.freemind_load(path)
     freemind.traverse(result, fn_list)
